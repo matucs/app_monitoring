@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { ScreenshotSkeleton } from '@/components/Skeleton'
+import { useToast } from '@/components/Toast'
 import { getApp, getScreenshots, captureScreenshot } from '@/lib/api'
 import type { App, Screenshot } from '@/types'
 import { Camera, ArrowLeft } from 'lucide-react'
@@ -12,6 +14,7 @@ export default function AppMonitor() {
     const [screenshots, setScreenshots] = useState<Screenshot[]>([])
     const [loading, setLoading] = useState(true)
     const [capturing, setCapturing] = useState(false)
+    const { showToast } = useToast()
 
     useEffect(() => {
         if (id) loadData()
@@ -26,7 +29,7 @@ export default function AppMonitor() {
             setApp(appData)
             setScreenshots(screenshotsData)
         } catch (err) {
-            console.error('Failed to load:', err)
+            showToast('Failed to load app data')
         } finally {
             setLoading(false)
         }
@@ -37,10 +40,11 @@ export default function AppMonitor() {
         setCapturing(true)
         try {
             await captureScreenshot(id)
+            showToast('Screenshot captured', 'success')
             const data = await getScreenshots(id)
             setScreenshots(data)
         } catch (err) {
-            console.error('Capture failed:', err)
+            showToast('Failed to capture screenshot')
         } finally {
             setCapturing(false)
         }
@@ -51,11 +55,41 @@ export default function AppMonitor() {
     }
 
     if (loading) {
-        return <div className="text-center py-8">Loading...</div>
+        return (
+            <div>
+                <div className="mb-6">
+                    <Link to="/">
+                        <Button variant="ghost" className="gap-2">
+                            <ArrowLeft className="h-4 w-4" /> Back to Apps
+                        </Button>
+                    </Link>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <ScreenshotSkeleton />
+                    <ScreenshotSkeleton />
+                    <ScreenshotSkeleton />
+                </div>
+            </div>
+        )
     }
 
     if (!app) {
-        return <div className="text-center py-8">App not found</div>
+        return (
+            <div>
+                <div className="mb-6">
+                    <Link to="/">
+                        <Button variant="ghost" className="gap-2">
+                            <ArrowLeft className="h-4 w-4" /> Back to Apps
+                        </Button>
+                    </Link>
+                </div>
+                <Card>
+                    <CardContent className="py-8 text-center">
+                        <p className="text-muted-foreground">App not found</p>
+                    </CardContent>
+                </Card>
+            </div>
+        )
     }
 
     return (

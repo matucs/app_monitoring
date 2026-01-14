@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { CardSkeleton } from '@/components/Skeleton'
+import { useToast } from '@/components/Toast'
 import { getApps, createApp, updateApp, deleteApp } from '@/lib/api'
 import type { App } from '@/types'
 import { Pencil, Trash2, Eye } from 'lucide-react'
@@ -16,6 +18,8 @@ export default function AppList() {
     const [url, setUrl] = useState('')
     const [name, setName] = useState('')
     const [submitting, setSubmitting] = useState(false)
+    const [error, setError] = useState('')
+    const { showToast } = useToast()
 
     useEffect(() => {
         loadApps()
@@ -26,7 +30,7 @@ export default function AppList() {
             const data = await getApps()
             setApps(data)
         } catch (err) {
-            console.error('Failed to load apps:', err)
+            showToast('Failed to load apps')
         } finally {
             setLoading(false)
         }
@@ -36,6 +40,7 @@ export default function AppList() {
         setEditingApp(null)
         setUrl('')
         setName('')
+        setError('')
         setDialogOpen(true)
     }
 
@@ -43,22 +48,27 @@ export default function AppList() {
         setEditingApp(app)
         setUrl(app.playStoreUrl)
         setName(app.name)
+        setError('')
         setDialogOpen(true)
     }
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
+        setError('')
         setSubmitting(true)
         try {
             if (editingApp) {
                 await updateApp(editingApp.id, name)
+                showToast('App updated', 'success')
             } else {
                 await createApp(url, name || undefined)
+                showToast('App added', 'success')
             }
             setDialogOpen(false)
             loadApps()
-        } catch (err) {
-            console.error('Save failed:', err)
+        } catch (err: any) {
+            const msg = err.response?.data?.error || 'Failed to save'
+            setError(msg)
         } finally {
             setSubmitting(false)
         }
@@ -68,14 +78,23 @@ export default function AppList() {
         if (!confirm(`Delete ${app.name}?`)) return
         try {
             await deleteApp(app.id)
+            showToast('App deleted', 'success')
             loadApps()
         } catch (err) {
-            console.error('Delete failed:', err)
+            showToast('Failed to delete app')
         }
     }
 
     if (loading) {
-        return <div className="text-center py-8">Loading...</div>
+        return (
+            <div className="space-y-3">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold">Tracked Apps</h1>
+                </div>
+                <CardSkeleton />
+                <CardSkeleton />
+            </div>
+        )
     }
 
     return (
@@ -91,6 +110,11 @@ export default function AppList() {
                             <DialogTitle>{editingApp ? 'Edit App' : 'Add New App'}</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            {error && (
+                                <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                                    {error}
+                                </div>
+                            )}
                             {!editingApp && (
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Play Store URL</label>
