@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import appsRouter from './routes/apps.js'
 import screenshotsRouter from './routes/screenshots.js'
+import { startScheduler } from './scheduler.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -20,4 +21,5 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
+    startScheduler()
 })
