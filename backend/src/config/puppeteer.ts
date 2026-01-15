@@ -3,7 +3,18 @@ export const PUPPETEER_ARGS = [
   '--disable-setuid-sandbox',
   '--disable-dev-shm-usage',
   '--disable-gpu',
-  '--single-process'
+  '--disable-software-rasterizer',
+  '--disable-extensions',
+  '--disable-background-networking',
+  '--disable-background-timer-throttling',
+  '--disable-renderer-backgrounding',
+  '--disable-backgrounding-occluded-windows',
+  '--disable-breakpad',
+  '--disable-component-extensions-with-background-pages',
+  '--disable-features=TranslateUI',
+  '--disable-ipc-flooding-protection',
+  '--no-first-run',
+  '--no-default-browser-check'
 ]
 
 export const VIEWPORT = {

@@ -6,19 +6,27 @@ import { PUPPETEER_ARGS, VIEWPORT, USER_AGENT } from '../config/puppeteer.js'
 ensureScreenshotsDir()
 
 export async function capturePlayStoreScreenshot(playStoreUrl: string, appId: string): Promise<string> {
-    const browser = await puppeteer.launch({
-        headless: true,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-        args: PUPPETEER_ARGS
-    })
-
+    let browser
     try {
+        browser = await puppeteer.launch({
+            headless: 'new',
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+            args: PUPPETEER_ARGS,
+            timeout: 60000
+        })
+
         const page = await browser.newPage()
         await page.setViewport(VIEWPORT)
         await page.setUserAgent(USER_AGENT)
         await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' })
 
-        await page.goto(playStoreUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+        await page.goto(playStoreUrl, { 
+            waitUntil: 'networkidle2', 
+            timeout: 30000 
+        }).catch(() => {
+            console.warn('Network idle timeout, continuing anyway...')
+        })
+        
         await delay(2000)
 
         await page.evaluate(() => {
@@ -43,9 +51,19 @@ export async function capturePlayStoreScreenshot(playStoreUrl: string, appId: st
             fullPage: true
         })
 
+        await page.close()
         return fileName
+    } catch (error: any) {
+        console.error('Screenshot capture error:', error)
+        throw new Error(`Failed to capture screenshot: ${error.message || 'Unknown error'}`)
     } finally {
-        await browser.close()
+        if (browser) {
+            try {
+                await browser.close()
+            } catch (err) {
+                console.error('Error closing browser:', err)
+            }
+        }
     }
 }
 

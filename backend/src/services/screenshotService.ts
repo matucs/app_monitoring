@@ -14,14 +14,19 @@ export async function getScreenshotsByAppId(appId: string) {
 
 export async function captureScreenshot(appId: string) {
     const app = await getAppById(appId)
-    console.log(`Capturing screenshot for ${app.name}...`)
+    console.log(`Capturing screenshot for ${app.name} (${app.playStoreUrl})...`)
 
-    const fileName = await capturePlayStoreScreenshot(app.playStoreUrl, app.id)
-    const result = await db.insert(screenshots).values({
-        appId: app.id,
-        fileName,
-    }).returning()
+    try {
+        const fileName = await capturePlayStoreScreenshot(app.playStoreUrl, app.id)
+        const result = await db.insert(screenshots).values({
+            appId: app.id,
+            fileName,
+        }).returning()
 
-    console.log(`Screenshot saved: ${fileName}`)
-    return result[0]
+        console.log(`Screenshot saved: ${fileName}`)
+        return result[0]
+    } catch (error: any) {
+        console.error(`Failed to capture screenshot for ${app.name}:`, error)
+        throw new AppError(500, `Failed to capture screenshot: ${error.message || 'Unknown error'}`)
+    }
 }
