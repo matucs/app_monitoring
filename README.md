@@ -1,95 +1,40 @@
 # App Monitor
 
-A marketing competition monitoring system for Android apps. Track Google Play Store listings and capture periodic screenshots to monitor competitor changes over time.
+Track Android apps from Google Play Store and capture periodic screenshots to monitor changes.
 
-## Features
-
-- **App Tracking** - Add apps by Play Store URL, system extracts package ID
-- **Periodic Screenshots** - Automatic capture every 6 hours (configurable)
-- **Manual Capture** - Take screenshots on-demand
-- **Timeline View** - Browse screenshots chronologically (newest first)
-- **Mobile Viewport** - Screenshots are captured in mobile view (390x844)
-
-## Tech Stack
-
-- **Backend**: Node.js, Express, TypeScript, Drizzle ORM, Puppeteer
-- **Frontend**: React, Vite, TypeScript, Shadcn/UI, Tailwind CSS
-- **Database**: PostgreSQL (NeonDB)
-
-## Project Structure
-
-```
-├── backend/
-│   ├── src/
-│   │   ├── db/           # Drizzle schema and connection
-│   │   ├── routes/       # API endpoints
-│   │   ├── services/     # Screenshot service
-│   │   └── scheduler.ts  # Cron job for periodic captures
-│   └── screenshots/      # Stored screenshot files
-├── frontend/
-│   ├── src/
-│   │   ├── components/   # UI components (Shadcn + custom)
-│   │   ├── pages/        # AppList, AppMonitor
-│   │   └── lib/          # API client, utilities
-└── README.md
-```
-
-## Setup
-
-### Prerequisites
-- Node.js 18+
-- NeonDB account (free tier works)
-
-### Backend
+## Quick Start
 
 ```bash
-cd backend
-npm install
-
-# Configure environment
-cp .env.example .env
-# Edit .env and add your NeonDB connection string
-
-# Push schema to database
-npm run db:push
-
-# Start development server
-npm run dev
+docker compose up --build
 ```
 
-### Frontend
+Access:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3001
+
+## Commands
 
 ```bash
-cd frontend
-npm install
-npm run dev
+docker compose down          # Stop
+docker compose logs -f      # Logs
+docker compose down -v      # Reset database
 ```
 
-The frontend runs on http://localhost:5173 and proxies API requests to the backend.
+## Local Development
 
-## API Endpoints
+1. Setup database (PostgreSQL or NeonDB)
+2. Add `DATABASE_URL` to `backend/.env`
+3. Run `npm run db:push` in backend
+4. Start backend: `cd backend && npm run dev`
+5. Start frontend: `cd frontend && npm run dev`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/apps | List all tracked apps |
-| POST | /api/apps | Add new app |
-| PUT | /api/apps/:id | Update app name |
-| DELETE | /api/apps/:id | Delete app |
-| GET | /api/apps/:id/screenshots | Get screenshots for app |
-| POST | /api/apps/:id/screenshots | Capture screenshot now |
+## Tech
 
-## Environment Variables
+- Backend: Node.js, Express, TypeScript, Drizzle, Puppeteer
+- Frontend: React, Vite, TypeScript, Tailwind
+- Database: PostgreSQL
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| DATABASE_URL | NeonDB Postgres connection string | required |
-| PORT | Backend server port | 3001 |
-| SCREENSHOT_INTERVAL_HOURS | Hours between automatic captures | 6 |
+## Deployment
 
-## Usage
-
-1. Start both backend and frontend
-2. Open http://localhost:5173
-3. Click "Add App" and paste a Google Play Store URL
-4. View the app's monitoring page to see screenshots
-5. Click "Capture Now" for immediate screenshots or wait for the scheduler
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment options (Railway, Render, Fly.io, VPS).
+# app_monitoring
