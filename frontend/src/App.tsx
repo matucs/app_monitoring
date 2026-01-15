@@ -1,13 +1,25 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, MemoryRouter } from 'react-router-dom'
 import './index.css'
 import AppList from './pages/AppList'
 import AppMonitor from './pages/AppMonitor'
 import { ToastProvider } from './components/Toast'
 
+const Router = (() => {
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.getItem('test')
+      return BrowserRouter
+    }
+  } catch (e) {
+    console.warn('sessionStorage unavailable, using MemoryRouter')
+  }
+  return MemoryRouter
+})()
+
 function App() {
   return (
     <ToastProvider>
-      <BrowserRouter>
+      <Router>
         <div className="min-h-screen bg-background">
           <header className="border-b">
             <div className="container mx-auto px-4 py-4">
@@ -21,7 +33,7 @@ function App() {
             </Routes>
           </main>
         </div>
-      </BrowserRouter>
+      </Router>
     </ToastProvider>
   )
 }

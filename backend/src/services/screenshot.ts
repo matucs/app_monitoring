@@ -1,32 +1,38 @@
 import puppeteer from 'puppeteer'
 import path from 'path'
-import fs from 'fs'
-import { fileURLToPath } from 'url'
+import { SCREENSHOTS_DIR, ensureScreenshotsDir } from '../utils/files.js'
+import { PUPPETEER_ARGS, VIEWPORT, USER_AGENT } from '../config/puppeteer.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const SCREENSHOTS_DIR = path.join(__dirname, '../../screenshots')
-
-if (!fs.existsSync(SCREENSHOTS_DIR)) {
-    fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true })
-}
+ensureScreenshotsDir()
 
 export async function capturePlayStoreScreenshot(playStoreUrl: string, appId: string): Promise<string> {
     const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        args: PUPPETEER_ARGS
     })
 
     try {
         const page = await browser.newPage()
-
-        // mobile viewport
-        await page.setViewport({ width: 390, height: 844 })
-        await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1')
+        await page.setViewport(VIEWPORT)
+        await page.setUserAgent(USER_AGENT)
+        await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' })
 
         await page.goto(playStoreUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+        await delay(2000)
 
-        // wait a bit for any lazy loaded content
-        await new Promise(r => setTimeout(r, 2000))
+        await page.evaluate(() => {
+            const meta = document.createElement('meta')
+            meta.name = 'viewport'
+            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+            document.head.appendChild(meta)
+        })
+
+        await delay(2000)
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2))
+        await delay(1000)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await delay(1000)
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         const fileName = `${appId}_${timestamp}.png`
@@ -41,4 +47,8 @@ export async function capturePlayStoreScreenshot(playStoreUrl: string, appId: st
     } finally {
         await browser.close()
     }
+}
+
+function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms))
 }

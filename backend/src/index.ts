@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import appsRouter from './routes/apps.js'
 import screenshotsRouter from './routes/screenshots.js'
+import { errorHandler } from './utils/errors.js'
 import { startScheduler } from './scheduler.js'
 
 const app = express()
@@ -16,10 +17,12 @@ app.use('/api/apps', appsRouter)
 app.use('/api', screenshotsRouter)
 
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok' })
+  res.json({ status: 'ok' })
 })
 
+app.use(errorHandler)
+
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-    startScheduler()
+  console.log(`Server running on port ${PORT}`)
+  startScheduler()
 })
