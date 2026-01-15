@@ -38,3 +38,4 @@ docker compose down -v      # Reset database
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment options (Railway, Render, Fly.io, VPS).
 # app_monitoring
+# app_monitoring
